@@ -48,8 +48,8 @@ type Cache struct {
 	credentialResolver repository.CredentialResolver
 	userInfoProvider   repository.UserInfoProvider
 	metadataStore      meta.MetadataStore
-
-	objectNotifier objectNotifier
+	repoSyncFrequency  int64
+	objectNotifier     objectNotifier
 }
 
 type objectNotifier interface {
@@ -63,7 +63,7 @@ type CacheOptions struct {
 	ObjectNotifier     objectNotifier
 }
 
-func NewCache(cacheDir string, opts CacheOptions) *Cache {
+func NewCache(cacheDir string, repoSyncFrequency int64, opts CacheOptions) *Cache {
 	return &Cache{
 		repositories:       make(map[string]*cachedRepository),
 		cacheDir:           cacheDir,
@@ -71,6 +71,7 @@ func NewCache(cacheDir string, opts CacheOptions) *Cache {
 		userInfoProvider:   opts.UserInfoProvider,
 		metadataStore:      opts.MetadataStore,
 		objectNotifier:     opts.ObjectNotifier,
+		repoSyncFrequency:  repoSyncFrequency,
 	}
 }
 
@@ -101,7 +102,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			if err != nil {
 				return nil, err
 			}
-			cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore)
+			cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore, c.repoSyncFrequency)
 			c.repositories[key] = cr
 		}
 		return cr, nil
@@ -137,7 +138,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			}); err != nil {
 				return nil, err
 			} else {
-				cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore)
+				cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore, c.repoSyncFrequency)
 				c.repositories[key] = cr
 			}
 		} else {

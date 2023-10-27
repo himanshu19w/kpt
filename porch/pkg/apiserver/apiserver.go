@@ -76,6 +76,7 @@ type ExtraConfig struct {
 	CacheDirectory        string
 	FunctionRunnerAddress string
 	DefaultImagePrefix    string
+	RepoSyncFrequency     int64
 }
 
 // Config defines the config for the apiserver
@@ -220,7 +221,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 
 	watcherMgr := engine.NewWatcherManager()
 
-	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
+	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, c.ExtraConfig.RepoSyncFrequency, cache.CacheOptions{
 		CredentialResolver: credentialResolver,
 		UserInfoProvider:   userInfoProvider,
 		MetadataStore:      metadataStore,
